@@ -16,6 +16,10 @@ module awk.grid {
                     '<input id="selectAll" type="checkbox" class="ag-filter-checkbox"/>'+
                     '([SELECT ALL])'+
                 '</label>'+
+                '<label id="selectTopMarketsLabel">' +
+                    '<input id="selectTopMarkets" type="checkbox" class="ag-filter-checkbox" />' +
+                    '(Select Top 120 Markets)' +
+                '</label>' +
             '</div>'+
             '<div class="ag-filter-list-viewport">'+
                 '<div class="ag-filter-list-container">'+
@@ -54,12 +58,15 @@ module awk.grid {
         private eMiniFilter: any;
         private api: any;
         private applyActive: any;
+        private topMarketActive: any;
+        private eSelectTopMarket: any;
         private eApplyButton: any;
 
         constructor(params: any) {
             this.filterParams = params.filterParams;
             this.rowHeight = (this.filterParams && this.filterParams.cellHeight) ? this.filterParams.cellHeight : DEFAULT_ROW_HEIGHT;
             this.applyActive = this.filterParams && this.filterParams.apply == true;
+            this.topMarketActive = this.filterParams && this.filterParams.topMarket == true;
             this.model = new SetFilterModel(params.colDef, params.rowModel, params.valueGetter);
             this.filterChangedCallback = params.filterChangedCallback;
             this.valueGetter = params.valueGetter;
@@ -161,6 +168,8 @@ module awk.grid {
             }
 
             this.setupApply();
+            
+            this.setupTopMarket();
         }
 
         private setupApply() {
@@ -171,6 +180,15 @@ module awk.grid {
                 });
             } else {
                 _.removeElement(this.eGui, '#applyPanel');
+            }
+        }
+        
+        private setupTopMarket() {
+            if (this.topMarketActive){
+                this.eSelectTopMarket = this.eGui.querySelector('#selectTopMarkets');
+                this.eSelectTopMarket.onclick = this.onSelectTopMarket.bind(this);
+            } else {
+                _.removeElement(this.eGui, '#selectTopMarketsLabel');
             }
         }
 
@@ -263,6 +281,7 @@ module awk.grid {
 
         onCheckboxClicked(eCheckbox: any, value: any) {
             var checked = eCheckbox.checked;
+            this.eSelectTopMarket.checked = false;
             if (checked) {
                 this.model.selectValue(value);
                 if (this.model.isEverythingSelected()) {
@@ -311,6 +330,7 @@ module awk.grid {
 
         private onSelectAll() {
             var checked = this.eSelectAll.checked;
+            this.eSelectTopMarket.checked = false;
             if (checked) {
                 this.model.selectEverything();
             } else {
@@ -318,6 +338,32 @@ module awk.grid {
             }
             this.updateAllCheckboxes(checked);
             this.filterChanged();
+        }
+        
+        private onSelectTopMarket() {
+            var checked = this.eSelectTopMarket.checked;
+            this.eSelectAll.checked = false;
+            if(checked){
+                this.model.selectTopMarkets();
+            } else {
+                this.model.selectNothing();
+            }
+            
+            if(checked){
+                this.updateCheckboxesByValue(checked);
+            } else {
+                this.updateAllCheckboxes(checked);
+            }
+            
+            this.filterChanged();
+        }
+        
+        private updateCheckboxesByValue(checked: any){
+            var currentlyDisplayedCheckboxLabels = this.eListContainer.querySelectorAll('#itemForRepeat label');
+            for (var i = 0, l = currentlyDisplayedCheckboxLabels.length; i < l; i++) {
+                var currentValue = currentlyDisplayedCheckboxLabels[i].querySelector('.ag-filter-value').innerHTML;
+                currentlyDisplayedCheckboxLabels[i].querySelector('.ag-filter-checkbox').checked = this.model.isValueSelected(currentValue);
+            }
         }
 
         private updateAllCheckboxes(checked: any) {

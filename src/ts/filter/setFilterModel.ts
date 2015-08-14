@@ -156,6 +156,26 @@ module awk.grid {
             }
             this.selectedValuesCount = count;
         }
+        
+        selectTopMarkets() {
+            var allData = this.rowModel.getTopLevelNodes();
+            var totalCount = allData.length;
+            var countItem = 0;
+            for (var i = 0; i < totalCount; i++) {
+                var currentData = allData[i].data;
+                var isMajorMarket = currentData.ism;
+                if(isMajorMarket){
+                    this.selectedValuesMap[currentData[this.colDef.field]] = null;
+                    countItem ++;
+                } else {
+                    if(currentData[this.colDef.field] in this.selectedValuesMap){
+                        delete this.selectedValuesMap[currentData[this.colDef.field]];
+                    }
+                }
+            }
+            
+            this.selectedValuesCount = countItem;
+        }
 
         isFilterActive() {
             return this.uniqueValues.length !== this.selectedValuesCount;
