@@ -330,7 +330,10 @@ module awk.grid {
 
         private onSelectAll() {
             var checked = this.eSelectAll.checked;
-            this.eSelectTopMarket.checked = false;
+            if(this.eSelectTopMarket){
+                this.eSelectTopMarket.checked = false;
+            }
+            
             if (checked) {
                 this.model.selectEverything();
             } else {
