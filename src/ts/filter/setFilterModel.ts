@@ -220,21 +220,20 @@ module awk.grid {
         
         isTopMarketSelected() {
             var allData = this.rowModel.getTopLevelNodes();
-            var topMarketCount = 0;
-            for (var i = 0; i < allData.length; i++) {
-                var currentData = allData[i].data;
-                var isMajorMarket = currentData.ism;
+            
+            var majorMarkets = allData.filter(function(obj: any){
+                return !!obj.data.ism;
+            });
+            
+            for (var i = 0; i < majorMarkets.length; i++) {
+                var currentData = majorMarkets[i].data;
                 
-                if(isMajorMarket){
-                    topMarketCount++;
-                    
-                    if(this.selectedValuesMap[currentData[this.colDef.field]] === undefined){
-                        return false
-                    }
+                if(this.selectedValuesMap[currentData[this.colDef.field]] === undefined){
+                    return false
                 }
             }
             
-            if(topMarketCount === this.selectedValuesCount){
+            if(majorMarkets.length === this.selectedValuesCount){
                 return true;
             }
         }
