@@ -67,7 +67,7 @@ module awk.grid {
             this.rowHeight = (this.filterParams && this.filterParams.cellHeight) ? this.filterParams.cellHeight : DEFAULT_ROW_HEIGHT;
             this.applyActive = this.filterParams && this.filterParams.apply == true;
             this.topMarketActive = this.filterParams && this.filterParams.topMarket == true;
-            this.model = new SetFilterModel(params.colDef, params.rowModel, params.valueGetter);
+            this.model = new SetFilterModel(params.colDef, params.rowModel, params.valueGetter, this);
             this.filterChangedCallback = params.filterChangedCallback;
             this.valueGetter = params.valueGetter;
             this.rowsInBodyContainer = {};
@@ -128,6 +128,32 @@ module awk.grid {
             this.model.refreshUniqueValues(keepSelection, isSelectAll);
             this.setContainerHeight();
             this.refreshVirtualRows();
+        }
+        
+        public refreshCustomFilters(): void {
+            if (this.model.isEverythingSelected()) {
+                this.eSelectAll.indeterminate = false;
+                this.eSelectAll.checked = true;
+            } else if (this.model.isNothingSelected()) {
+                this.eSelectAll.indeterminate = false;
+                this.eSelectAll.checked = false;
+            } else {
+                if(this.model.isTopMarketSelected()){
+                    if(this.eSelectTopMarket){
+                        this.eSelectTopMarket.checked = true;
+                        
+                        this.eSelectAll.indeterminate = false;
+                        this.eSelectAll.checked = false;
+                    }
+                }
+                else{
+                    if(this.eSelectTopMarket){
+                        this.eSelectTopMarket.checked = false;
+                    }
+                    
+                    this.eSelectAll.indeterminate = true;
+                }
+            }
         }
 
         private createTemplate() {
@@ -281,7 +307,10 @@ module awk.grid {
 
         onCheckboxClicked(eCheckbox: any, value: any) {
             var checked = eCheckbox.checked;
-            this.eSelectTopMarket.checked = false;
+            if(this.eSelectTopMarket){
+                this.eSelectTopMarket.checked = false;
+            }
+            
             if (checked) {
                 this.model.selectValue(value);
                 if (this.model.isEverythingSelected()) {
@@ -345,7 +374,11 @@ module awk.grid {
         
         private onSelectTopMarket() {
             var checked = this.eSelectTopMarket.checked;
-            this.eSelectAll.checked = false;
+            if(this.eSelectAll){
+                this.eSelectAll.checked = false;
+                this.eSelectAll.indeterminate = false;
+            }
+            
             if(checked){
                 this.model.selectTopMarkets();
             } else {

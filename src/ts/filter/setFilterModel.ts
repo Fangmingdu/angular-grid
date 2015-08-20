@@ -14,11 +14,13 @@ module awk.grid {
         uniqueValues: any;
         miniFilter: any;
         selectedValuesCount: any;
+        filterGui: any;
 
-        constructor(colDef: any, rowModel: any, valueGetter: any) {
+        constructor(colDef: any, rowModel: any, valueGetter: any, filterGui: any) {
             this.colDef = colDef;
             this.rowModel = rowModel;
             this.valueGetter = valueGetter;
+            this.filterGui = filterGui;
 
             this.createUniqueValues();
 
@@ -158,23 +160,19 @@ module awk.grid {
         }
         
         selectTopMarkets() {
-            var allData = this.rowModel.getTopLevelNodes();
-            var totalCount = allData.length;
-            var countItem = 0;
-            for (var i = 0; i < totalCount; i++) {
-                var currentData = allData[i].data;
-                var isMajorMarket = currentData.ism;
-                if(isMajorMarket){
-                    this.selectedValuesMap[currentData[this.colDef.field]] = null;
-                    countItem ++;
-                } else {
-                    if(currentData[this.colDef.field] in this.selectedValuesMap){
-                        delete this.selectedValuesMap[currentData[this.colDef.field]];
-                    }
-                }
-            }
+            var that = this;
+            this.selectNothing();
             
-            this.selectedValuesCount = countItem;
+            var allData = this.rowModel.getTopLevelNodes();
+            
+            var majorMarkets = allData.filter(function(obj: any){
+                return !!obj.data.ism;
+            });
+            this.selectedValuesCount = majorMarkets.length;
+            
+            majorMarkets.forEach(function(obj: any){
+                that.selectedValuesMap[obj.data[that.colDef.field]] = null;
+            });
         }
 
         isFilterActive() {
@@ -219,6 +217,27 @@ module awk.grid {
         isNothingSelected() {
             return this.uniqueValues.length === 0;
         }
+        
+        isTopMarketSelected() {
+            var allData = this.rowModel.getTopLevelNodes();
+            var topMarketCount = 0;
+            for (var i = 0; i < allData.length; i++) {
+                var currentData = allData[i].data;
+                var isMajorMarket = currentData.ism;
+                
+                if(isMajorMarket){
+                    topMarketCount++;
+                    
+                    if(this.selectedValuesMap[currentData[this.colDef.field]] === undefined){
+                        return false
+                    }
+                }
+            }
+            
+            if(topMarketCount === this.selectedValuesCount){
+                return true;
+            }
+        }
 
         getModel() {
             if (!this.isFilterActive()) {
@@ -244,7 +263,9 @@ module awk.grid {
                 }
             } else {
                 this.selectEverything();
-            }
+            };
+            
+            this.filterGui.refreshCustomFilters();
         }
     }
 }
